@@ -5,9 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Borrowing;
 use Illuminate\Http\Request;
 use App\Models\Book;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BorrowingController extends Controller
 {
+
+    public function exportPDF()
+    {
+        $history = \App\Models\Borrowing::with('book')->get(); // ambil semua data
+        // Tes output
+        // dd($history);
+    
+        $pdf = Pdf::loadView('pdf.history', compact('history'));
+        return $pdf->download('riwayat-peminjaman.pdf');
+    }
+    
+
     public function store(Book $book)
     {
         // Cegah pinjam lagi buku yang sama kalau status masih borrowed
@@ -66,12 +79,23 @@ class BorrowingController extends Controller
     
     public function markAsReturned($id)
     {
-        $borrowing = Borrowing::findOrFail($id);
-        // Mark as returned and set the returned_at date
-        $borrowing->update(['status' => 'returned', 'returned_at' => now()]);
-        
-        return redirect()->back()->with('success', 'Buku telah dikembalikan.');
+        // Ambil data peminjaman beserta relasi buku-nya
+        $borrowing = \App\Models\Borrowing::with('book')->findOrFail($id);
+    
+        // Update status jadi returned + set tanggal kembali
+        $borrowing->update([
+            'status' => 'returned',
+            'returned_at' => now(),
+        ]);
+    
+        // Tambah kembali stok buku
+        if ($borrowing->book) {
+            $borrowing->book->increment('stock');
+        }
+    
+        return redirect()->back()->with('success', 'Buku telah dikembalikan dan stok diperbarui.');
     }
+    
     public function markAsBorrowed($id)
     {
         $borrowing = Borrowing::findOrFail($id);

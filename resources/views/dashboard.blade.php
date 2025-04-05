@@ -118,6 +118,14 @@
                 </div>
             </div>
 
+            <a href="{{ route('dashboard.pdf') }}"
+            class="mt-4 inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+            📥 Download PDF Riwayat
+         </a>
+         
+
+
+
             @else
             {{-- User Dashboard --}}
             <div class="mb-4">
